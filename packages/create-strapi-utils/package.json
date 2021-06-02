@@ -1,0 +1,16 @@
+{
+  "name": "create-strapi-utils",
+  "version": "1.0.0",
+  "description": "",
+  "main": "prompt-user.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "axios": "0.21.1",
+    "inquirer": "8.1.0",
+    "js-yaml": "4.1.0"
+  }
+}

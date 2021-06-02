@@ -2,6 +2,7 @@
 
 const commander = require('commander');
 const generateNewApp = require('strapi-generate-new');
+const promptUser = require('../create-strapi-utils');
 const packageJson = require('./package.json');
 
 const program = new commander.Command(packageJson.name);
@@ -10,7 +11,7 @@ let projectName;
 
 program
   .version(packageJson.version)
-  .arguments('<directory>')
+  .arguments('[directory]')
   .option('--no-run', 'Do not start the application after it is created')
   .option('--use-npm', 'Force usage of npm instead of yarn to create the project')
   .option('--debug', 'Display database connection error')
@@ -33,15 +34,27 @@ program
   })
   .parse(process.argv);
 
-if (projectName === undefined) {
-  console.error('Please specify the <directory> of your project');
+async function initProject(projectName, program) {
+  const useQuickstart = program.quickstart !== undefined;
 
-  // eslint-disable-next-line no-process-exit
-  process.exit(1);
+  const options = {};
+  if (!projectName || !program.template || !useQuickstart) {
+    const prompt = await promptUser(projectName, !useQuickstart, 'templates');
+    projectName = prompt.directory;
+    options.template = prompt.selected;
+    options.quickstart = prompt.quick || program.quickstart;
+  }
+
+  const generateStrapiAppOptions = {
+    ...program,
+    ...options,
+  };
+
+  generateNewApp(projectName, generateStrapiAppOptions).then(() => {
+    if (process.platform === 'win32') {
+      process.exit(0);
+    }
+  });
 }
 
-generateNewApp(projectName, program).then(() => {
-  if (process.platform === 'win32') {
-    process.exit(0);
-  }
-});
+initProject(projectName, program);

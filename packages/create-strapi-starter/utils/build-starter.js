@@ -10,6 +10,7 @@ const chalk = require('chalk');
 
 const generateNewApp = require('strapi-generate-new');
 
+const promptUser = require('../../create-strapi-utils');
 const hasYarn = require('./has-yarn');
 const { runInstall, runApp, initGit } = require('./child-process');
 const { getRepoInfo, downloadGitHubRepo } = require('./fetch-github');
@@ -89,8 +90,19 @@ async function installWithLogs(path) {
  * @param  {object} projectArgs projectName and starterUrl for the project
  * @param  {object} program Commands for generating new application
  */
-module.exports = async function buildStarter(projectArgs, program) {
-  const { projectName, starterUrl } = projectArgs;
+module.exports = async function buildStarter(programArgs, program) {
+  let { projectName, starterUrl } = programArgs;
+
+  const useQuickstart = program.quickstart !== undefined;
+
+  // Prompt user when an argument is missing
+  const options = {};
+  if (!projectName || !starterUrl || !useQuickstart) {
+    const prompt = await promptUser(projectName, !useQuickstart, 'starters');
+    projectName = prompt.directory;
+    starterUrl = prompt.selected;
+    options.quickstart = prompt.quick || program.quickstart;
+  }
 
   // Fetch repo info
   const repoInfo = await getRepoInfo(starterUrl);
@@ -131,13 +143,6 @@ module.exports = async function buildStarter(projectArgs, program) {
   // Delete temporary directory
   await fse.remove(tmpDir);
 
-  console.log(`Creating Strapi starter frontend at ${chalk.yellow(frontendPath)}.`);
-
-  // Install frontend dependencies
-  console.log(`Installing ${chalk.yellow(fullName)} starter`);
-
-  await installWithLogs(frontendPath);
-
   const fullUrl = `https://github.com/${fullName}`;
   // Set command options for Strapi app
   const generateStrapiAppOptions = {
@@ -145,10 +150,16 @@ module.exports = async function buildStarter(projectArgs, program) {
     starter: fullUrl,
     template: starterJson.template,
     run: false,
+    ...options,
   };
 
   // Create strapi app using the template
   await generateNewApp(join(rootPath, 'backend'), generateStrapiAppOptions);
+
+  // Install frontend dependencies
+  console.log(`Creating Strapi starter frontend at ${chalk.yellow(frontendPath)}.`);
+  console.log(`Installing ${chalk.yellow(fullName)} starter`);
+  await installWithLogs(frontendPath);
 
   // Setup monorepo
   initPackageJson(rootPath, projectBasename);

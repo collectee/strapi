@@ -20,7 +20,6 @@ sentry.init({
 
 module.exports = (projectDirectory, cliArguments) => {
   checkRequirements();
-
   const rootPath = resolve(projectDirectory);
 
   const tmpPath = join(os.tmpdir(), `strapi${crypto.randomBytes(6).toString('hex')}`);
@@ -35,7 +34,7 @@ module.exports = (projectDirectory, cliArguments) => {
     // use pacakge version as strapiVersion (all packages have the same version);
     strapiVersion: require('../package.json').version,
     debug: cliArguments.debug !== undefined,
-    quick: cliArguments.quickstart !== undefined,
+    quick: cliArguments.quickstart,
     template: cliArguments.template,
     packageJsonStrapi: {
       template: cliArguments.template,
@@ -81,7 +80,6 @@ module.exports = (projectDirectory, cliArguments) => {
   initCancelCatcher(scope);
 
   console.log(`Creating a new Strapi application at ${chalk.green(rootPath)}.`);
-  console.log();
 
   return generateNew(scope).catch(error => {
     console.error(error);
