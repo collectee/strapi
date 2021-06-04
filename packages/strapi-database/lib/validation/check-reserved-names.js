@@ -58,6 +58,9 @@ const getModelsFrom = source => _.flatMap(source, iteratee => _.values(iteratee.
  */
 module.exports = ({ strapi, manager }) => {
   [...getModelsFrom(strapi.api), ...getModelsFrom(strapi.plugins)].forEach(model => {
+    if (model.setting) {
+      Object.assign(model, model.setting);
+    }
     checkReservedModelName(model);
     checkReservedAttributeNames(model, { manager });
   });
